@@ -425,9 +425,26 @@ class SlaveNode(object):
         self.state = state
         self.user_count = 0
 
+from debug_stats import DebugStats
+
 class MasterLocustRunner(DistributedLocustRunner):
     def __init__(self, *args, **kwargs):
         super(MasterLocustRunner, self).__init__(*args, **kwargs)
+        
+        def debug_stats():
+            while True:
+                elapsed = time() - DebugStats.last_print
+                print "Slave reports (%i):" % DebugStats.slave_calls, DebugStats.slave_total_time * 1000, "ms"
+                print "Stats aggregation (%i):" % DebugStats.stats_calls, DebugStats.stats_total_time * 1000, "ms"
+                print "Time since last print:", elapsed
+                print
+                DebugStats.slave_calls = 0
+                DebugStats.slave_total_time = 0
+                DebugStats.stats_calls = 0
+                DebugStats.stats_total_time = 0
+                DebugStats.last_print = time()
+                gevent.sleep(3.0)
+        gevent.spawn(debug_stats)
         
         class SlaveNodesDict(dict):
             def get_by_state(self, state):

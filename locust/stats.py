@@ -296,7 +296,12 @@ def on_report_to_master(client_id, data):
     data["errors"] =  RequestStats.errors
     RequestStats.errors = {}
 
+
+from debug_stats import DebugStats
+
 def on_slave_report(client_id, data):
+    start = time.clock()
+    
     for stats in data["stats"]:
         if not stats.name in RequestStats.requests:
             RequestStats.requests[stats.name] = RequestStats(stats.name)
@@ -305,6 +310,10 @@ def on_slave_report(client_id, data):
     
     for err_message, err_count in data["errors"].iteritems():
         RequestStats.errors[err_message] = RequestStats.errors.setdefault(err_message, 0) + err_count
+    
+    elapsed = time.clock() - start
+    DebugStats.slave_total_time += elapsed
+    DebugStats.slave_calls += 1
 
 events.request_success += on_request_success
 events.request_failure += on_request_failure

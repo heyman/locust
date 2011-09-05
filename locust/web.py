@@ -2,14 +2,14 @@
 
 import json
 import os.path
-from time import time
+from time import time, clock
 from gevent import wsgi
 from locust.stats import RequestStats
 from locust import version
 
 from flask import Flask, make_response, request, render_template
 
-DEFAULT_CACHE_TIME = 2.0
+DEFAULT_CACHE_TIME = 3.0
 
 app = Flask("Locust Monitor")
 app.debug = True
@@ -120,6 +120,9 @@ def distribution_stats_csv():
 
 @app.route('/stats/requests')
 def request_stats():
+    from debug_stats import DebugStats
+    start = clock()
+    
     global _request_stats_context_cache
     from core import locust_runner, MasterLocustRunner
     
@@ -163,6 +166,10 @@ def request_stats():
         _request_stats_context_cache = {"last_time": elapsed - now, "report": report, "cache_time": cache_time}
     else:
         report = _request_stats_context_cache["report"]
+    
+    elapsed = clock() - start
+    DebugStats.stats_total_time += elapsed
+    DebugStats.stats_calls += 1
     return json.dumps(report)
 
 def start(locust, hatch_rate, num_clients, num_requests):
