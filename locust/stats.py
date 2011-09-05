@@ -173,7 +173,7 @@ class RequestStats(object):
             return merged
         
         new.num_reqs_per_sec = merge_dict_add(self.num_reqs_per_sec, other.num_reqs_per_sec)
-        new.response_times = merge_dict_add(self.response_times, other.response_times)
+        #new.response_times = merge_dict_add(self.response_times, other.response_times)
         return new
     
     def get_stripped_report(self):
