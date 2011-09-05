@@ -293,6 +293,15 @@ def on_slave_report(client_id, data):
             RequestStats.requests[stats.name] = RequestStats(stats.name)
         RequestStats.requests[stats.name] += stats
         RequestStats.global_last_request_timestamp = max(RequestStats.global_last_request_timestamp, stats.last_request_timestamp)
+        
+    # Ugly hack to remove all num_reqs_per_sec history except for the seconds
+    for name, stats in RequestStats.requests.iteritems():
+        new_num_reqs = {}
+        for i in xrange(stats.last_request_timestamp-30, stats.last_request_timestamp+1):
+            if i in stats.num_reqs_per_sec:
+                new_num_reqs[i] = stats.num_reqs_per_sec[i]
+        stats.num_reqs_per_sec = new_num_reqs
+        
     
     for err_message, err_count in data["errors"].iteritems():
         RequestStats.errors[err_message] = RequestStats.errors.setdefault(err_message, 0) + err_count
