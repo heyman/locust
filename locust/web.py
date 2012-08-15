@@ -11,9 +11,10 @@ from flask import Flask, make_response, request, render_template
 
 import runners
 from runners import MasterLocustRunner
-from locust.stats import RequestStats, median_from_dict
+from locust.stats import RequestStats, median_from_dict, percentile
 from locust import version
 import gevent
+from chart import pop_response_times
 
 import logging
 logger = logging.getLogger(__name__)
@@ -153,6 +154,19 @@ def distribution_stats_csv():
     response.headers["Content-disposition"] = disposition
     return response
 
+@app.route('/chart/distribution/fetch')
+def distribution_chart_pop():
+    responses = pop_response_times()
+    avg_response_time = sum(responses) / max(len(responses), 1)
+    responses = sorted(responses)
+    result = {"mean": avg_response_time,
+                "10%": percentile(responses, 0.10),
+                "25%": percentile(responses, 0.25),
+                "50%": percentile(responses, 0.5),
+                "75%": percentile(responses, 0.75),
+                "90%": percentile(responses, 0.90)}
+    return json.dumps(result)
+    
 @app.route('/stats/requests')
 def request_stats():
     global _request_stats_context_cache

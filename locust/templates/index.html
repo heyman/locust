@@ -132,6 +132,7 @@
         <div class="status" id="status">
             <ul class="tabs">
                 <li><a href="#">Statistics</a></li>
+                <li><a id="distribution_link" href="#">Distribution</a></li>
                 <li><a href="#">Failures</a></li>
                 <li><a href="#">Exceptions</a></li>
             </ul>
@@ -160,6 +161,11 @@
                         <a href="/stats/requests/csv">Download request statistics CSV</a><br />
                         <a href="/stats/distribution/csv">Download response time distribution CSV</a>
                     </div>
+                </div>
+                <div style="display:none;">
+                    <div id="chart_legend" style="width:100px;"></div>
+                    <div id="distribution_chart" style="width:1000px;height:600px;background-color:inherit; margin-top:40px;"></div>
+                    <a href="#" id="clear_chart">Reset chart data</a>
                 </div>
                 <div style="display:none;">
                     <table id="errors" class="stats">
@@ -221,6 +227,8 @@
     <script type="text/javascript" src="/static/jquery-1.4.min.js"></script> 
     <script type="text/javascript" src="/static/jquery.jqote2.min.js"></script>
     <script type="text/javascript" src="/static/jquery.tools.min.js"></script> 
+    <script type="text/javascript" src="/static/jquery.flot.min.js"></script>
+    <script type="text/javascript" src="/static/jquery.flot.fillbetween.js"></script>
     <script type="text/x-jqote-template" id="stats-template">
         <![CDATA[
         <tr class="<%=(alternate ? "dark" : "")%>">
