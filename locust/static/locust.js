@@ -184,18 +184,19 @@ function updateChart() {
           user_counts_reached.shift();
         }
 
-        dataset = [
-        { label: "10%-90%", id: 'f10%', data: plot_data['10%'], lines: { show: true, lineWidth: 0, fill: false }, color: "rgba(50,250,50,0.2)" },
-        { label: "25%-75%", id: 'f25%', data: plot_data['25%'], lines: { show: true, lineWidth: 0, fill: 0.2 }, color: "rgba(50,250,50,0.4)", fillBetween: 'f10%' },
-        { label: "Median", id: 'f50%', data: plot_data['50%'], lines: { show: true, lineWidth: 1, fill: 0.4, shadowSize: 0 }, color: "rgb(50,250,50)", fillBetween: 'f25%' },
-        { id: 'f75%', data: plot_data['75%'], lines: { show: true, lineWidth: 0, fill: 0.4 }, color: "rgb(50,250,50)", fillBetween: 'f50%' },
-        { id: 'f90%', data: plot_data['90%'], lines: { show: true, lineWidth: 0, fill: 0.2 }, color: "rgb(50,250,50)", fillBetween: 'f75%' },
-        { label: "Average", data: plot_data['mean'], lines: { show: true }, color: "rgb(250,250,250)"},
-        ];
-        
         if ($("ul.tabs").find("a.current").is("#distribution_link")  // We only draw chart when "Distribution" tab is selected and a test is running
         && $("body").attr("class") != "ready" && $("body").attr("class") != "stopped") {   
-        
+            
+            // Prepare chart data
+            dataset = [
+                { label: "10%-90%", id: 'f10%', data: plot_data['10%'], lines: { show: true, lineWidth: 0, fill: false }, color: "rgba(50,250,50,0.2)" },
+                { label: "25%-75%", id: 'f25%', data: plot_data['25%'], lines: { show: true, lineWidth: 0, fill: 0.2 }, color: "rgba(50,250,50,0.4)", fillBetween: 'f10%' },
+                { label: "Median", id: 'f50%', data: plot_data['50%'], lines: { show: true, lineWidth: 1, fill: 0.4, shadowSize: 0 }, color: "rgb(50,250,50)", fillBetween: 'f25%' },
+                { id: 'f75%', data: plot_data['75%'], lines: { show: true, lineWidth: 0, fill: 0.4 }, color: "rgb(50,250,50)", fillBetween: 'f50%' },
+                { id: 'f90%', data: plot_data['90%'], lines: { show: true, lineWidth: 0, fill: 0.2 }, color: "rgb(50,250,50)", fillBetween: 'f75%' },
+                { label: "Average", data: plot_data['mean'], lines: { show: true }, color: "rgb(250,250,250)"},
+            ];
+            
             var plot = $.plot($("#distribution_chart"), dataset, {
                 xaxis: {
                     tickFormatter: function(v, axis) { return v.toMMSS()},
