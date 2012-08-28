@@ -1,34 +1,27 @@
-from stats import percentile, RequestStats
-from collections import deque
 import runners
-from runners import DistributedLocustRunner, SLAVE_REPORT_INTERVAL
-import math
+from runners import DistributedLocustRunner
 import events
+from time import time
 
-response_times = deque([])
+response_times = []
+cached_chart_data = {"time": 0, "response_times": []}
 
-# Max time in seconds to store response times (older are removed)
-TIME_WINDOW = 15.0
+# Cache the result this many seconds as well as gather response times during this period
+CACHE_UPDATE_TIME = 4.0
 
-def pop_response_times():
+def get_chart_data():
     if isinstance(runners.locust_runner, DistributedLocustRunner):
-        resp = [r for sublist in response_times for r in sublist]
-    else:
-        resp = list(response_times)
-    response_times.clear()
-    return resp
+        return {"time": cached_chart_data["time"], "response_times": [item for sublist in cached_chart_data["response_times"] for item in sublist]}
+    return cached_chart_data
 
 def on_request_success_chart(_, _1, response_time, _2):
-    if isinstance(runners.locust_runner, DistributedLocustRunner):
-        response_times.append(response_time)
-    else:
-        response_times.append(response_time)
+    global response_times, cached_chart_data
+    response_times.append(response_time)
 
-        # remove from the queue
-        rps = RequestStats.sum_stats().current_rps
-        if len(response_times) > rps*TIME_WINDOW:
-            for i in xrange(len(response_times) - int(math.ceil(rps*TIME_WINDOW))):
-                response_times.popleft()
+    if not isinstance(runners.locust_runner, DistributedLocustRunner):
+        if time() > CACHE_UPDATE_TIME + cached_chart_data["time"]:
+            cached_chart_data = {"time": time(), "response_times": response_times}
+            response_times = []
 
 def on_report_to_master_chart(_, data):
     global response_times
@@ -36,14 +29,13 @@ def on_report_to_master_chart(_, data):
     response_times = []
 
 def on_slave_report_chart(_, data):
+    global response_times, cached_chart_data
     if "current_responses" in data:
         response_times.append(data["current_responses"])
 
-    # remove from the queue
-    slaves = runners.locust_runner.slave_count
-    response_times_per_slave_count = TIME_WINDOW/SLAVE_REPORT_INTERVAL
-    if len(response_times) > slaves * response_times_per_slave_count:
-        response_times.popleft()
+    if time() > CACHE_UPDATE_TIME + cached_chart_data["time"]:
+        cached_chart_data = {"time": time(), "response_times": response_times}
+        response_times = []
 
 def register_listeners():
     events.report_to_master += on_report_to_master_chart

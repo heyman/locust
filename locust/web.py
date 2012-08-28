@@ -14,7 +14,7 @@ from runners import MasterLocustRunner
 from locust.stats import RequestStats, median_from_dict, percentile
 from locust import version
 import gevent
-from chart import pop_response_times
+from chart import get_chart_data
 
 import logging
 logger = logging.getLogger(__name__)
@@ -155,16 +155,22 @@ def distribution_stats_csv():
     return response
 
 @app.route('/chart/distribution/fetch')
-def distribution_chart_pop():
-    responses = pop_response_times()
+def request_chart_data():
+    chart_data = get_chart_data()
+    if chart_data["time"] ==  request.args["timestamp"] or len(chart_data["response_times"]) == 0:
+        return json.dumps({"timestamp": chart_data["time"]})
+    
+    responses = sorted(chart_data["response_times"])
     avg_response_time = sum(responses) / max(len(responses), 1)
-    responses = sorted(responses)
-    result = {"mean": avg_response_time,
-                "10%": percentile(responses, 0.10),
-                "25%": percentile(responses, 0.25),
-                "50%": percentile(responses, 0.5),
-                "75%": percentile(responses, 0.75),
-                "90%": percentile(responses, 0.90)}
+    
+    result = {  "timestamp": chart_data["time"],
+                "data": { "mean": avg_response_time,
+                        "10%": percentile(responses, 0.10),
+                        "25%": percentile(responses, 0.25),
+                        "50%": percentile(responses, 0.5),
+                        "75%": percentile(responses, 0.75),
+                        "90%": percentile(responses, 0.90)
+                }}
     return json.dumps(result)
     
 @app.route('/stats/requests')
