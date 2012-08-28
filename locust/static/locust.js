@@ -157,71 +157,79 @@ var start_time = new Date().getTime();
 var last_reached = 9;
 var user_count = 0;
 var time, treshold, closest_treshold, offset;
+var data_timestamp = 0;
 
 function updateChart() {
-    $.get('/chart/distribution/fetch', function (data) {
-        time = (new Date().getTime() - start_time) / 1000;
+    $.get('/chart/distribution/fetch', parameters = {"timestamp": data_timestamp},function (data) {
         report = JSON.parse(data);
-        
-        // Add the latest data from report
-        for (var key in report) {
-          if (report[key])
-            plot_data[key].push([time,report[key]]);
+        if (report.timestamp == data_timestamp) {
+            setTimeout(updateChart, 1000);
         }
-        if (plot_data.mean.length > 20) { // Max 20 datapoints
-          for (var l in plot_data)
-            plot_data[l].shift();
-        }
-        
-        // Mark user count thresholds
-        threshold = Math.pow(10,Math.floor(Math.log(user_count)/ Math.log(10))); // 10, 100 1000 10000 etc
-        closest_threshold = Math.floor(user_count/threshold)*threshold;          // closest threshold reached ex 70, 80, 90, 100, 200, 300 etc
-        if (closest_threshold > last_reached) {
-          user_counts_reached.push([time, closest_threshold, [plot_data.mean[plot_data.mean.length-1][0], plot_data.mean[plot_data.mean.length-1][1]]]);
-          last_reached = closest_threshold;
-        }
-        if (user_counts_reached.length && user_counts_reached[0][2][0] <= plot_data.mean[0][0]) { // remove points outside the chart
-          user_counts_reached.shift();
-        }
-
-        if ($("ul.tabs").find("a.current").is("#distribution_link")  // We only draw chart when "Distribution" tab is selected and a test is running
-        && $("body").attr("class") != "ready" && $("body").attr("class") != "stopped") {   
+        else {
+            console.log(report.data);
+            data_timestamp = report.timestamp;
+            time = (new Date().getTime() - start_time) / 1000;
             
-            // Prepare chart data
-            dataset = [
-                { label: "10%-90%", id: 'f10%', data: plot_data['10%'], lines: { show: true, lineWidth: 0, fill: false }, color: "rgba(50,250,50,0.2)" },
-                { label: "25%-75%", id: 'f25%', data: plot_data['25%'], lines: { show: true, lineWidth: 0, fill: 0.2 }, color: "rgba(50,250,50,0.4)", fillBetween: 'f10%' },
-                { label: "Median", id: 'f50%', data: plot_data['50%'], lines: { show: true, lineWidth: 1, fill: 0.4, shadowSize: 0 }, color: "rgb(50,250,50)", fillBetween: 'f25%' },
-                { id: 'f75%', data: plot_data['75%'], lines: { show: true, lineWidth: 0, fill: 0.4 }, color: "rgb(50,250,50)", fillBetween: 'f50%' },
-                { id: 'f90%', data: plot_data['90%'], lines: { show: true, lineWidth: 0, fill: 0.2 }, color: "rgb(50,250,50)", fillBetween: 'f75%' },
-                { label: "Average", data: plot_data['mean'], lines: { show: true }, color: "rgb(250,250,250)"},
-            ];
-            
-            var plot = $.plot($("#distribution_chart"), dataset, {
-                xaxis: {
-                    tickFormatter: function(v, axis) { return v.toMMSS()},
-                    tickDecimals: 0,
-                    minTickSize: 5,
-                    color: "rgb(200,200,200)"
-                },
-                yaxis: { 
-                    tickFormatter: function (v) { return v + " ms"; } ,
-                    color: "rgb(200,200,200)"
-                },
-                legend: {
-                    container: $("#chart_legend"),
-                    noColumns: 4,
-                }
-            });
-
-            // Render the user count thresholds
-            for(var i=0; i<user_counts_reached.length; i++) {
-                offset = plot.pointOffset({x: user_counts_reached[i][2][0], y: user_counts_reached[i][2][1] });
-                $("#distribution_chart").append('<div style="position:absolute;left:'+ offset.left + 'px;top:'+
-                offset.top +'px;color:#FFF">'+ user_counts_reached[i][1] +' users</div>');
+            // Add the latest data from report
+            for (var key in report.data) {
+              if (report.data[key])
+                plot_data[key].push([time,report.data[key]]);
             }
+            if (plot_data.mean.length > 20) { // Max 20 datapoints
+              for (var l in plot_data)
+                plot_data[l].shift();
+            }
+            
+            // Mark user count thresholds
+            threshold = Math.pow(10,Math.floor(Math.log(user_count)/ Math.log(10))); // 10, 100 1000 10000 etc
+            closest_threshold = Math.floor(user_count/threshold)*threshold;          // closest threshold reached ex 70, 80, 90, 100, 200, 300 etc
+            if (closest_threshold > last_reached) {
+              user_counts_reached.push([time, closest_threshold, [plot_data.mean[plot_data.mean.length-1][0], plot_data.mean[plot_data.mean.length-1][1]]]);
+              last_reached = closest_threshold;
+            }
+            if (user_counts_reached.length && user_counts_reached[0][2][0] <= plot_data.mean[0][0]) { // remove points outside the chart
+              user_counts_reached.shift();
+            }
+
+            if ($("ul.tabs").find("a.current").is("#distribution_link")  // We only draw chart when "Distribution" tab is selected and a test is running
+            && $("body").attr("class") != "ready" && $("body").attr("class") != "stopped") {   
+                
+                // Prepare chart data
+                dataset = [
+                    { label: "10%-90%", id: 'f10%', data: plot_data['10%'], lines: { show: true, lineWidth: 0, fill: false }, color: "rgba(50,250,50,0.2)" },
+                    { label: "25%-75%", id: 'f25%', data: plot_data['25%'], lines: { show: true, lineWidth: 0, fill: 0.2 }, color: "rgba(50,250,50,0.4)", fillBetween: 'f10%' },
+                    { label: "Median", id: 'f50%', data: plot_data['50%'], lines: { show: true, lineWidth: 1, fill: 0.4, shadowSize: 0 }, color: "rgb(50,250,50)", fillBetween: 'f25%' },
+                    { id: 'f75%', data: plot_data['75%'], lines: { show: true, lineWidth: 0, fill: 0.4 }, color: "rgb(50,250,50)", fillBetween: 'f50%' },
+                    { id: 'f90%', data: plot_data['90%'], lines: { show: true, lineWidth: 0, fill: 0.2 }, color: "rgb(50,250,50)", fillBetween: 'f75%' },
+                    { label: "Average", data: plot_data['mean'], lines: { show: true }, color: "rgb(250,250,250)"},
+                ];
+                
+                var plot = $.plot($("#distribution_chart"), dataset, {
+                    xaxis: {
+                        tickFormatter: function(v, axis) { return v.toMMSS()},
+                        tickDecimals: 0,
+                        minTickSize: 5,
+                        color: "rgb(200,200,200)"
+                    },
+                    yaxis: { 
+                        tickFormatter: function (v) { return v + " ms"; } ,
+                        color: "rgb(200,200,200)"
+                    },
+                    legend: {
+                        container: $("#chart_legend"),
+                        noColumns: 4,
+                    }
+                });
+
+                // Render the user count thresholds
+                for(var i=0; i<user_counts_reached.length; i++) {
+                    offset = plot.pointOffset({x: user_counts_reached[i][2][0], y: user_counts_reached[i][2][1] });
+                    $("#distribution_chart").append('<div style="position:absolute;left:'+ offset.left + 'px;top:'+
+                    offset.top +'px;color:#FFF">'+ user_counts_reached[i][1] +' users</div>');
+                }
+            }
+            setTimeout(updateChart, 4000);
         }
-        setTimeout(updateChart, 4000);
     });
 }
 updateChart();
