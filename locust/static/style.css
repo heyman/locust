@@ -92,6 +92,7 @@ a {
     left: 50%;
     top: 100px;
     margin-left: -169px;
+    z-index: 1;
 }
 
 .ramp {
