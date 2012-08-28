@@ -166,7 +166,6 @@ function updateChart() {
             setTimeout(updateChart, 1000);
         }
         else {
-            console.log(report.data);
             data_timestamp = report.timestamp;
             time = (new Date().getTime() - start_time) / 1000;
             
@@ -232,7 +231,6 @@ function updateChart() {
         }
     });
 }
-updateChart();
 
 function updateStats() {
     $.get('/stats/requests', function (data) {
@@ -261,6 +259,7 @@ function updateStats() {
     });
 }
 updateStats();
+updateChart();
 
 function updateExceptions() {
     $.get('/exceptions', function (data) {
