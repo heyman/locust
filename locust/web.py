@@ -11,7 +11,7 @@ from flask import Flask, make_response, request, render_template
 
 import runners
 from runners import MasterLocustRunner
-from locust.stats import RequestStats, median_from_dict, percentile
+from locust.stats import RequestStats, median_from_dict
 from locust import version
 import gevent
 from chart import get_chart_data
@@ -160,21 +160,7 @@ def distribution_stats_csv():
 @app.route('/chart/distribution/fetch')
 def request_chart_data():
     chart_data = get_chart_data()
-    if chart_data["time"] ==  request.args["timestamp"] or len(chart_data["response_times"]) == 0:
-        return json.dumps({"timestamp": chart_data["time"]})
-    
-    responses = sorted(chart_data["response_times"])
-    avg_response_time = sum(responses) / max(len(responses), 1)
-    
-    result = {  "timestamp": chart_data["time"],
-                "data": { "mean": avg_response_time,
-                        "10%": percentile(responses, 0.10),
-                        "25%": percentile(responses, 0.25),
-                        "50%": percentile(responses, 0.5),
-                        "75%": percentile(responses, 0.75),
-                        "90%": percentile(responses, 0.90)
-                }}
-    return json.dumps(result)
+    return json.dumps(chart_data)
     
 @app.route('/stats/requests')
 def request_stats():
