@@ -145,7 +145,10 @@ def distribution_stats_csv():
         '"100%"',
     ))]
     for s in chain(_sort_stats(runners.locust_runner.request_stats), [RequestStats.sum_stats("Total", full_request_history=True)]):
-        rows.append(s.percentile(tpl='"%s",%i,%i,%i,%i,%i,%i,%i,%i,%i,%i'))
+        if s.num_reqs:
+            rows.append(s.percentile(tpl='"%s",%i,%i,%i,%i,%i,%i,%i,%i,%i,%i'))
+        else:
+            rows.append('"%s",0,"N/A","N/A","N/A","N/A","N/A","N/A","N/A","N/A","N/A"' % s.name)
 
     response = make_response("\n".join(rows))
     file_name = "distribution_{0}.csv".format(time())
@@ -228,7 +231,7 @@ def request_stats():
 
 @app.route("/exceptions")
 def exceptions():
-    response = make_response(json.dumps({'exceptions': [{"count": row["count"], "traceback": row["traceback"], "nodes" : ", ".join(row["nodes"])} for row in runners.locust_runner.exceptions.itervalues()]}))
+    response = make_response(json.dumps({'exceptions': [{"count": row["count"], "msg": row["msg"], "traceback": row["traceback"], "nodes" : ", ".join(row["nodes"])} for row in runners.locust_runner.exceptions.itervalues()]}))
     response.headers["Content-type"] = "application/json"
     return response
 
