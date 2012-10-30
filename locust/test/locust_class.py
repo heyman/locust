@@ -1,6 +1,6 @@
 import unittest
 
-from locust.core import Locust, SubLocust, require_once, task, events, RescheduleTaskImmediately
+from locust.core import Locust, require_once, task, events, RescheduleTaskImmediately
 from locust import ResponseError, InterruptLocust
 from locust.exception import CatchResponseError
 
@@ -174,7 +174,7 @@ class TestLocustClass(unittest.TestCase):
 
 class TestSubLocust(unittest.TestCase):
     def test_sub_locust(self):
-        class MySubLocust(SubLocust):
+        class MySubLocust(Locust):
             min_wait=1
             max_wait=1
             @task()
@@ -192,7 +192,7 @@ class TestSubLocust(unittest.TestCase):
         self.assertTrue(loc.sub_locust_task_executed)
     
     def test_sub_locust_arguments(self):
-        class MySubLocust(SubLocust):
+        class MySubLocust(Locust):
             min_wait=1
             max_wait=1
             @task()

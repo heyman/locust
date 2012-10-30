@@ -3,7 +3,7 @@ import time
 
 from testcases import WebserverTestCase
 from locust.stats import RequestStats
-from locust.core import Locust, SubLocust, task
+from locust.core import Locust, task
 from locust.inspectlocust import get_task_ratio_dict
 
 class TestRequestStats(unittest.TestCase):
@@ -123,7 +123,7 @@ class MyLocust(Locust):
         pass
     
     @task(25)
-    class MySubLocust(SubLocust):
+    class MySubLocust(Locust):
         @task
         def task1(self):
             pass

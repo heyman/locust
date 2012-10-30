@@ -251,38 +251,25 @@ class Locust(LocustBase):
     The client support cookies, and therefore keeps the session between HTTP requests.
     """
     
-    def __init__(self):
+    def __init__(self, parent=None, *args, **kwargs):
         super(Locust, self).__init__()
-        if self.host is None:
-            raise LocustError("You must specify the base host. Either in the host attribute in the Locust class, or on the command line using the --host option.")
         
-        self.client = HttpSession(base_url=self.host)
-
-class WebLocust(Locust):
-    def __init__(self, *args, **kwargs):
-        warnings.warn("WebLocust class has been, deprecated. Use Locust class instead.")
-        super(WebLocust, self).__init__(*args, **kwargs)
-
-class SubLocust(LocustBase):
-    """
-    Class for making a sub Locust that can be included as a task inside of a normal Locust/WebLocus,
-    as well as inside another sub locust. 
-    
-    When the parent locust enters the sub locust, it will not
-    continue executing it's tasks until a task in the sub locust has called the interrupt() function.
-    """
-    
-    def __init__(self, parent, *args, **kwargs):
-        super(SubLocust, self).__init__()
-        
-        self.parent = parent
-        if isinstance(parent, LocustBase):
+        # check if this Locust class is used an a subtask to another Locust class
+        if parent is not None and isinstance(parent, Locust):
+            self.parent = parent
             self.client = parent.client
-        
-        self.args = args
-        self.kwargs = kwargs
-        
-        self()
+            self.root = parent.root
+            
+            self.args = args
+            self.kwargs = kwargs
+            
+            self()
+        else:
+            if self.host is None:
+                raise LocustError("You must specify the base host. Either in the host attribute in the Locust class, or on the command line using the --host option.")
+            
+            self.client = HttpSession(base_url=self.host)
+            self.root = self
     
     def interrupt(self, reschedule=True):
         """
@@ -292,3 +279,14 @@ class SubLocust(LocustBase):
         and execute, a new task
         """
         raise InterruptLocust(reschedule)
+
+
+class WebLocust(Locust):
+    def __init__(self, *args, **kwargs):
+        warnings.warn("WebLocust class has been, deprecated. Use Locust class instead.")
+        super(WebLocust, self).__init__(*args, **kwargs)
+
+class SubLocust(Locust):
+    def __init__(self, *args, **kwargs):
+        warnings.warn("SubLocust class has been, deprecated. Use Locust class instead.")
+        super(SubLocust, self).__init__(*args, **kwargs)
