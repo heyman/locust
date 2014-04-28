@@ -7,7 +7,7 @@ from itertools import chain
 from collections import defaultdict
 
 from gevent import wsgi
-from flask import Flask, make_response, request, render_template
+from flask import Flask, Blueprint, make_response, request, render_template
 
 from . import runners
 from .cache import memoize
@@ -21,12 +21,10 @@ logger = logging.getLogger(__name__)
 
 DEFAULT_CACHE_TIME = 2.0
 
-app = Flask(__name__)
-app.debug = True
-app.root_path = os.path.dirname(os.path.abspath(__file__))
+webui = Blueprint("web_ui", __name__)
 
 
-@app.route('/')
+@webui.route('/')
 def index():
     is_distributed = isinstance(runners.locust_runner, MasterLocustRunner)
     if is_distributed:
@@ -42,7 +40,7 @@ def index():
         version=version
     )
 
-@app.route('/swarm', methods=["POST"])
+@webui.route('/swarm', methods=["POST"])
 def swarm():
     assert request.method == "POST"
 
@@ -53,19 +51,19 @@ def swarm():
     response.headers["Content-type"] = "application/json"
     return response
 
-@app.route('/stop')
+@webui.route('/stop')
 def stop():
     runners.locust_runner.stop()
     response = make_response(json.dumps({'success':True, 'message': 'Test stopped'}))
     response.headers["Content-type"] = "application/json"
     return response
 
-@app.route("/stats/reset")
+@webui.route("/stats/reset")
 def reset_stats():
     runners.locust_runner.stats.reset_all()
     return "ok"
     
-@app.route("/stats/requests/csv")
+@webui.route("/stats/requests/csv")
 def request_stats_csv():
     rows = [
         ",".join([
@@ -103,7 +101,7 @@ def request_stats_csv():
     response.headers["Content-disposition"] = disposition
     return response
 
-@app.route("/stats/distribution/csv")
+@webui.route("/stats/distribution/csv")
 def distribution_stats_csv():
     rows = [",".join((
         '"Name"',
@@ -131,7 +129,7 @@ def distribution_stats_csv():
     response.headers["Content-disposition"] = disposition
     return response
 
-@app.route('/stats/requests')
+@webui.route('/stats/requests')
 @memoize(timeout=DEFAULT_CACHE_TIME, dynamic_timeout=True)
 def request_stats():
     stats = []
@@ -173,11 +171,23 @@ def request_stats():
     report["user_count"] = runners.locust_runner.user_count
     return json.dumps(report)
 
-@app.route("/exceptions")
+@webui.route("/exceptions")
 def exceptions():
     response = make_response(json.dumps({'exceptions': [{"count": row["count"], "msg": row["msg"], "traceback": row["traceback"], "nodes" : ", ".join(row["nodes"])} for row in runners.locust_runner.exceptions.itervalues()]}))
     response.headers["Content-type"] = "application/json"
     return response
+
+# Provide backwards compatibility with test scripts that imports 
+# locust.web.app in order to add web UI routes
+app = None
+def get_app():
+    global app
+    app = Flask(__name__)
+    app.debug = True
+    app.root_path = os.path.dirname(os.path.abspath(__file__))
+    app.register_blueprint(webui)
+    return app
+get_app()
 
 def start(locust, options):
     wsgi.WSGIServer((options.web_host, options.port), app, log=None).serve_forever()

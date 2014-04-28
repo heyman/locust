@@ -1,12 +1,15 @@
 import base64
 import gevent
 import gevent.pywsgi
+from gevent import wsgi
 import random
 import unittest
 from copy import copy
 from StringIO import StringIO
 
-from locust import events
+from locust import events, web, runners, stats
+from locust.main import parse_options
+from locust.runners import LocustRunner
 from locust.stats import global_stats
 from flask import Flask, request, redirect, make_response, send_file
 
@@ -77,15 +80,34 @@ class LocustTestCase(unittest.TestCase):
     safe to register any custom event handlers within the test.
     """
     def setUp(self):
+        # store event handlers
         self._event_handlers = {}
         for name in dir(events):
             event = getattr(events, name)
             if isinstance(event, events.EventHook):
                 self._event_handlers[event] = copy(event._handlers)
+        
+        # clear stats 
+        stats.global_stats.clear_all()
+        # create locust runner
+        parser = parse_options()[0]
+        options = parser.parse_args([])[0]
+        runners.locust_runner = LocustRunner([], options)
+        self.runner = runners.locust_runner
+        
+        # create instance of Web UI Flask app
+        app = web.get_app()
+        self._web_ui_server = wsgi.WSGIServer(('127.0.0.1', 0), app, log=None)
+        gevent.spawn(lambda: self._web_ui_server.serve_forever())
+        gevent.sleep(0.01)
+        self.web_port = self._web_ui_server.server_port
+        self.web_app = app
                       
     def tearDown(self):
         for event, handlers in self._event_handlers.iteritems():
             event._handlers = handlers
+        
+        self._web_ui_server.stop()
     
     def assertIn(self, member, container, msg=None):
         """
