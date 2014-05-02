@@ -10,13 +10,15 @@ import logging
 import socket
 from optparse import OptionParser
 
+import events
+import plugins
 import web
 from log import setup_logging, console_logger
 from stats import stats_printer, print_percentile_stats, print_error_report, print_stats
 from inspectlocust import print_task_ratio, get_task_ratio_dict
 from core import Locust, HttpLocust
 from runners import MasterLocustRunner, SlaveLocustRunner, LocalLocustRunner
-import events
+
 
 _internals = [Locust, HttpLocust]
 version = locust.version
@@ -412,6 +414,13 @@ def main():
         except socket.error, e:
             logger.error("Failed to connect to the Locust master: %s", e)
             sys.exit(-1)
+    
+    # load locust plugins
+    from locust.plugins.percentile import ResponseTimePercentile
+    LOCUST_PLUGINS = [ResponseTimePercentile]
+    for plugin in LOCUST_PLUGINS:
+        plugins.registry.add_plugin(plugin)
+    plugins.registry.load_plugins(runners.locust_runner, web.get_app())
     
     if not options.only_summary and (options.print_stats or (options.no_web and not options.slave)):
         # spawn stats printing greenlet

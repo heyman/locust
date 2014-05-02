@@ -7,7 +7,7 @@ import unittest
 from copy import copy
 from StringIO import StringIO
 
-from locust import events, web, runners, stats
+from locust import events, plugins, web, runners, stats
 from locust.main import parse_options
 from locust.runners import LocustRunner
 from locust.stats import global_stats
@@ -79,6 +79,9 @@ class LocustTestCase(unittest.TestCase):
     Test case class that restores locust.events.EventHook listeners on tearDown, so that it is
     safe to register any custom event handlers within the test.
     """
+    
+    PLUGINS = []
+    
     def setUp(self):
         # store event handlers
         self._event_handlers = {}
@@ -102,8 +105,16 @@ class LocustTestCase(unittest.TestCase):
         gevent.sleep(0.01)
         self.web_port = self._web_ui_server.server_port
         self.web_app = app
+        
+        # load plugins
+        for plugin in self.PLUGINS:
+            plugins.registry.add_plugin(plugin)
+        plugins.registry.load_plugins(self.runner, self.web_app)
                       
     def tearDown(self):
+        # clear loaded plugins
+        plugins.registry.unload_plugins()
+        
         for event, handlers in self._event_handlers.iteritems():
             event._handlers = handlers
         
