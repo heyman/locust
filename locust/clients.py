@@ -1,10 +1,10 @@
 import re
 import time
+from datetime import timedelta
 from urlparse import urlparse, urlunparse
 
 import requests
 from requests import Response, Request
-from requests.packages.urllib3.response import HTTPResponse
 from requests.auth import HTTPBasicAuth
 from requests.exceptions import (RequestException, MissingSchema,
     InvalidSchema, InvalidURL)
@@ -13,11 +13,6 @@ import events
 from exception import CatchResponseError, ResponseError
 
 absolute_http_url_regexp = re.compile(r"^https?://", re.I)
-
-
-def timedelta_to_ms(td):
-    "python 2.7 has a total_seconds method for timedelta objects. This is here for py<2.7 compat."
-    return int((td.microseconds + (td.seconds + td.days * 24 * 3600) * 10**6) / 10**3) 
 
 
 class LocustResponse(Response):
@@ -115,11 +110,11 @@ class HttpSession(requests.Session):
         
         response = self._send_request_safe_mode(method, url, **kwargs)
         
-        request_meta["method"] = response.request.method
-        request_meta["name"] = name or response.request.path_url 
-
         # record the consumed time
-        request_meta["response_time"] = timedelta_to_ms(response.elapsed) 
+        request_meta["response_time"] = int((time.time() - request_meta["start_time"]) * 1000)
+        
+        request_meta["method"] = response.request.method
+        request_meta["name"] = name or (response.history and response.history[0] or response).request.path_url
         
         # get the length of the content, but if the argument stream is set to True, we take
         # the size from the content-length header, in order to not trigger fetching of the body
@@ -163,7 +158,6 @@ class HttpSession(requests.Session):
         except RequestException as e:
             r = LocustResponse()
             r.error = e
-            r.raw = HTTPResponse()  # otherwise, tests fail
             r.status_code = 0  # with this status_code, content returns None
             r.request = Request(method, url).prepare() 
             return r

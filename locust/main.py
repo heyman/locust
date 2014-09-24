@@ -345,7 +345,7 @@ def main():
 
     locustfile = find_locustfile(options.locustfile)
     if not locustfile:
-        logger.error("Could not find any locustfile! See --help for available options.")
+        logger.error("Could not find any locustfile! Ensure file ends in '.py' and see --help for available options.")
         sys.exit(1)
 
     docstring, locusts = load_locustfile(locustfile)
@@ -430,7 +430,7 @@ def main():
         """
         Shut down locust by firing quitting event, printing stats and exiting
         """
-        logger.info("Shutting down, bye..")
+        logger.info("Shutting down (exit code %s), bye." % code)
 
         events.quitting.fire()
         print_stats(runners.locust_runner.request_stats)
@@ -448,7 +448,10 @@ def main():
     try:
         logger.info("Starting Locust %s" % version)
         main_greenlet.join()
-        shutdown(0)
+        code = 0
+        if len(runners.locust_runner.errors):
+            code = 1
+        shutdown(code=code)
     except KeyboardInterrupt as e:
         shutdown(0)
 
