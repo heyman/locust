@@ -2,8 +2,8 @@
 Writing a locustfile
 ======================
 
-A locustfile is a normal python file. The only requirement is that it declares at least one class -
-let's call it the locust class - that inherits from the class Locust. 
+A locustfile is a normal python file. The only requirement is that it declares at least one class—
+let's call it the locust class—that inherits from the class Locust. 
 
 The Locust class
 ================
@@ -24,8 +24,8 @@ The *min_wait* and *max_wait* attributes
 
 Additionally to the task_set attribute, one usually want to declare the *min_wait* and *max_wait* 
 attributes. These are the minimum and maximum time, in milliseconds, that a simulated user will wait 
-between executing each task. *min_wait* and *max_wait* defaults to 1000, and therefore a locust will 
-always wait 1 second between each task if *min_wait* and *max_wait* is not declared.
+between executing each task. *min_wait* and *max_wait* default to 1000, and therefore a locust will 
+always wait 1 second between each task if *min_wait* and *max_wait* are not declared.
 
 With the following locustfile, each user would wait between 5 and 15 seconds between tasks::
 
@@ -41,7 +41,7 @@ With the following locustfile, each user would wait between 5 and 15 seconds bet
         min_wait = 5000
         max_wait = 15000
 
-The *min_wait* and *max_wait* attributes can also be overrided in a TaskSet class.
+The *min_wait* and *max_wait* attributes can also be overridden in a TaskSet class.
 
 The *weight* attribute
 ----------------------
@@ -78,15 +78,15 @@ If the Locust class represents a swarming locust, you could say that the TaskSet
 the brain of the locust. Each Locust class must have a *task_set* attribute set, that points to 
 a TaskSet.
 
-A TaskSet is, like it's name suggests, a collection of tasks. These tasks are normal python callables 
-and - if we were loadtesting an auction website - could do stuff like "loading the start page", 
+A TaskSet is, like its name suggests, a collection of tasks. These tasks are normal python callables 
+and—if we were load-testing an auction website—could do stuff like "loading the start page", 
 "searching for some product" and "making a bid". 
 
 When a load test is started, each instance of the spawned Locust classes will start executing their 
-TaskSet. What happens then is that each TaskSet will pick one of it's tasks and call it. It will then 
+TaskSet. What happens then is that each TaskSet will pick one of its tasks and call it. It will then 
 wait a number of milliseconds, chosen at random between the Locust class' *min_wait* and *max_wait* attributes 
 (unless min_wait/max_wait has been defined directly under the TaskSet, in which case it will use 
-it's own values instead). Then it will again pick a new task which will be called, then wait again, 
+its own values instead). Then it will again pick a new task which will be called, then wait again, 
 and so on.
 
 Declaring tasks
@@ -135,8 +135,8 @@ it. However, it's also possible to define the tasks of a TaskSet by setting the
 :py:attr:`tasks <locust.core.TaskSet.tasks>` attribute (using the @task decorator will actually 
 just populate the *tasks* attribute).
 
-The *tasks* attribute which is either a list of python callables, or a *<callable : int>* dict. 
-The tasks are python callables that receive one argument - the TaskSet class instance that is executing 
+The *tasks* attribute is either a list of python callables, or a *<callable : int>* dict. 
+The tasks are python callables that receive one argument—the TaskSet class instance that is executing 
 the task. Here is an extremely simple example of a locustfile (this locustfile won't actually load test anything)::
 
     from locust import Locust, TaskSet
@@ -153,8 +153,8 @@ the task. Here is an extremely simple example of a locustfile (this locustfile w
 
 If the 
 tasks attribute is specified as a list, each time a task is to be performed, it will be randomly 
-chosen from the *tasks* attribute. If however, *tasks* is a dict - with callables as keys and ints 
-as values - the task that is to be executed will be chosen at random but with the int as ratio. So 
+chosen from the *tasks* attribute. If however, *tasks* is a dict—with callables as keys and ints 
+as values—the task that is to be executed will be chosen at random but with the int as ratio. So 
 with a tasks that looks like this::
 
     {my_task: 3, another_task:1}
@@ -164,8 +164,8 @@ with a tasks that looks like this::
 TaskSets can be nested
 ----------------------
 
-A very important property of TaskSets are that they can be nested, because real websites are usually 
-built up in an hierarchical way, with multiple sub sections. Nesting TaskSets will therefore allow 
+A very important property of TaskSets is that they can be nested, because real websites are usually 
+built up in an hierarchical way, with multiple sub-sections. Nesting TaskSets will therefore allow 
 us to define a behaviour that simulates users in a more realistic way. For example 
 we could define TaskSets with the following structure:
 
@@ -189,7 +189,7 @@ we could define TaskSets with the following structure:
  * About page
 
 The way you nest TaskSets is just like when you specify a task using the **tasks** attribute, but 
-instead of refering to a python function, you point it to another TaskSet::
+instead of referring to a python function, you point it to another TaskSet::
 
     class ForumPage(TaskSet):
         @task(20)
@@ -212,15 +212,15 @@ instead of refering to a python function, you point it to another TaskSet::
             pass
 
 So in above example, if the ForumPage would get selected for execution when the UserBehaviour 
-TaskSet is executing, is. that the ForumPage TaskSet would start executing. The ForumPage TaskSet 
-would then pick one of it's own task, execute it, then wait, and so on. 
+TaskSet is executing, then the ForumPage TaskSet would start executing. The ForumPage TaskSet 
+would then pick one of its own tasks, execute it, then wait, and so on. 
 
 There is one important thing to note about the above example, and that is the call to 
 self.interrupt() in the ForumPage's stop method. What this does is essentially that it will 
 stop executing the ForumPage task set and the execution will continue in the UserBehaviour instance. 
 If we wouldn't have had a call to the :py:meth:`interrupt() <locust.core.TaskSet.interrupt>` method 
 somewhere in ForumPage, the Locust would never stop running the ForumPage task once it has started. 
-But by having the interrupt function, we can - together with task weighting - define how likely it 
+But by having the interrupt function, we can—together with task weighting—define how likely it 
 is that a simulated user leaves the forum.
 
 It's also possible to declare a nested TaskSet, inline in a class, using the 
@@ -245,7 +245,7 @@ Referencing the Locust instance, or the parent TaskSet instance
 ---------------------------------------------------------------
 
 A TaskSet instance will have the attribute :py:attr:`locust <locust.core.TaskSet.locust>` point to 
-it's Locust instance, and the attribute :py:attr:`parent <locust.core.TaskSet.parent>` point to it's 
+its Locust instance, and the attribute :py:attr:`parent <locust.core.TaskSet.parent>` point to its 
 parent TaskSet (it will point to the Locust instance, in the base TaskSet).
 
 
@@ -262,9 +262,9 @@ class exists. When using this class, each instance gets a
     :members: client
     :noindex:
 
-When inheriting from the HttpLocust class, we can use it's client attribute to make HTTP requests 
+When inheriting from the HttpLocust class, we can use its client attribute to make HTTP requests 
 against the server. Here is an example of a locust file that can be used to load test a site 
-with two urls; **/** and **/about/**::
+with two URLs; **/** and **/about/**::
 
     from locust import HttpLocust, TaskSet, task
     
@@ -323,19 +323,19 @@ Safe mode
 The HTTP client is configured to run in safe_mode. What this does is that any request that fails due to 
 a connection error, timeout, or similar will not raise an exception, but rather return an empty dummy 
 Response object. The request will be reported as a failure in Locust's statistics. The returned dummy 
-Response's *content* attribute will be set to None, and it's *status_code* will be 0.
+Response's *content* attribute will be set to None, and its *status_code* will be 0.
 
 
 Manually controlling if a request should be considered successful or a failure
 ------------------------------------------------------------------------------
 
-By default, requests are marked as failed requests unless the HTTP response code is ok (2xx). 
-Most of the time, this default is what you want. Sometimes however - for example when testing 
+By default, requests are marked as failed requests unless the HTTP response code is OK (2xx). 
+Most of the time, this default is what you want. Sometimes however—for example when testing 
 a URL endpoint that you expect to return 404, or testing a badly designed system that might 
-return *200 OK* even though an error occurred - there's a need for manually controlling if 
+return *200 OK* even though an error occurred—there's a need for manually controlling if 
 locust should consider a request as a success or a failure.
 
-One can mark requests as failed, even when the response code is okay, by using the 
+One can mark requests as failed, even when the response code is OK, by using the 
 *catch_response* argument and a with statement::
 
     with client.get("/", catch_response=True) as response:
@@ -355,9 +355,9 @@ Grouping requests to URLs with dynamic parameters
 -------------------------------------------------
 
 It's very common for websites to have pages whose URLs contain some kind of dynamic parameter(s). 
-Often it makes sense to group these URL's together in Locust's statistics. This can be done 
+Often it makes sense to group these URLs together in Locust's statistics. This can be done 
 by passing a *name* argument to the :py:class:`HttpSession's <locust.clients.HttpSession>` 
-different reqeust methods. 
+different request methods. 
 
 Example::
 
