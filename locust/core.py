@@ -96,6 +96,10 @@ class NoClientWarningRaiser(object):
         raise LocustError("No client instantiated. Did you intend to inherit from HttpLocust?")
 
 
+def _default_wait_function(self):
+    return random.randint(self.min_wait, self.max_wait)
+
+
 class Locust(object):
     """
     Represents a "user" which is to be hatched and attack the system that is to be load tested.
@@ -117,7 +121,7 @@ class Locust(object):
     max_wait = 1000
     """Maximum waiting time between the execution of locust tasks"""
 
-    wait_function = lambda self: random.randint(self.min_wait,self.max_wait) 
+    wait_function = _default_wait_function#lambda self: random.randint(self.min_wait,self.max_wait) 
     """Function used to calculate waiting time between the execution of locust tasks in milliseconds"""
     
     task_set = None
@@ -320,13 +324,20 @@ class TaskSet(object):
 
         self.parent = parent
         
-        # if this class doesn't have a min_wait, max_wait or wait_function defined, copy it from Locust
-        if not self.min_wait:
-            self.min_wait = self.locust.min_wait
-        if not self.max_wait:
-            self.max_wait = self.locust.max_wait
         if not self.wait_function:
-            self.wait_function = self.locust.wait_function
+            # If no custom wait_function has been declared on the TaskSet, we want to use the wait_function 
+            # from the Locust class. However, if the wait_function on the Locust class is the default one 
+            # we don't want to use the method that is bound to the Locust class, instead we want to use a method 
+            # bound to the TaskSet, so that the TaskSet's min_wait and max_wait attributes are used
+            if type(self.locust).wait_function == _default_wait_function:
+                # if this class doesn't have a min_wait, max_wait copy it from Locust
+                if not self.min_wait:
+                    self.min_wait = self.locust.min_wait
+                if not self.max_wait:
+                    self.max_wait = self.locust.max_wait
+                self.wait_function = type(self.locust).wait_function.__get__(self, type(self))
+            else:
+                self.wait_function = self.locust.wait_function
 
         self._lock.acquire()
         if hasattr(self, "setup") and self._setup_has_run is False:
