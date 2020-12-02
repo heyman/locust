@@ -1,4 +1,3 @@
-from locust.user.wait_time import constant
 from typing import Any, Callable, List, TypeVar, Union
 from gevent import GreenletExit, greenlet
 from gevent.pool import Group
@@ -57,7 +56,7 @@ class User(object, metaclass=UserMeta):
     max_wait = None
     """Deprecated: Use wait_time instead. Maximum waiting time between the execution of locust tasks"""
 
-    wait_time = constant(0)
+    wait_time = None
     """
     Method that returns the time (in seconds) between the execution of locust tasks.
     Can be overridden for individual TaskSets.

@@ -7,7 +7,7 @@ from gevent.queue import Queue
 import greenlet
 
 import locust
-from locust import runners, constant, LoadTestShape
+from locust import runners, between, constant, LoadTestShape
 from locust.main import create_environment
 from locust.user import User, TaskSet, task
 from locust.env import Environment
@@ -306,6 +306,8 @@ class TestLocustRunner(LocustTestCase):
 
     def test_reset_stats(self):
         class MyUser(User):
+            wait_time = constant(0)
+
             @task
             class task_set(TaskSet):
                 @task
@@ -329,6 +331,8 @@ class TestLocustRunner(LocustTestCase):
 
     def test_no_reset_stats(self):
         class MyUser(User):
+            wait_time = constant(0)
+
             @task
             class task_set(TaskSet):
                 @task
@@ -358,6 +362,7 @@ class TestLocustRunner(LocustTestCase):
 
     def test_users_can_call_runner_quit_without_deadlocking(self):
         class BaseUser(User):
+            wait_time = constant(0)
             stop_triggered = False
 
             @task
@@ -382,6 +387,7 @@ class TestLocustRunner(LocustTestCase):
 
     def test_runner_quit_can_run_on_stop_for_multiple_users_concurrently(self):
         class BaseUser(User):
+            wait_time = constant(0)
             stop_count = 0
 
             @task
@@ -494,6 +500,8 @@ class TestMasterWorkerRunners(LocustTestCase):
         """
 
         class TestUser(User):
+            wait_time = constant(0)
+
             @task
             def my_task(self):
                 pass
@@ -549,6 +557,8 @@ class TestMasterWorkerRunners(LocustTestCase):
         """
 
         class TestUser(User):
+            wait_time = constant(0)
+
             @task
             def my_task(self):
                 pass
@@ -1046,6 +1056,8 @@ class TestMasterRunner(LocustTestCase):
 
     def test_custom_shape_scale_up(self):
         class MyUser(User):
+            wait_time = constant(0)
+
             @task
             def my_task(self):
                 pass
@@ -1098,6 +1110,8 @@ class TestMasterRunner(LocustTestCase):
 
     def test_custom_shape_scale_down(self):
         class MyUser(User):
+            wait_time = constant(0)
+
             @task
             def my_task(self):
                 pass
@@ -1240,6 +1254,7 @@ class TestWorkerRunner(LocustTestCase):
     def test_worker_stop_timeout(self):
         class MyTestUser(User):
             _test_state = 0
+            wait_time = constant(0)
 
             @task
             def the_task(self):
@@ -1289,6 +1304,7 @@ class TestWorkerRunner(LocustTestCase):
     def test_worker_without_stop_timeout(self):
         class MyTestUser(User):
             _test_state = 0
+            wait_time = constant(0)
 
             @task
             def the_task(self):
@@ -1395,6 +1411,7 @@ class TestStopTimeout(LocustTestCase):
 
         class MyTestUser(User):
             tasks = [MyTaskSet]
+            wait_time = constant(0)
 
         environment = Environment(user_classes=[MyTestUser])
         runner = environment.create_local_runner()
@@ -1444,6 +1461,7 @@ class TestStopTimeout(LocustTestCase):
 
         class MyTestUser(User):
             tasks = [MyTaskSet]
+            wait_time = constant(0)
 
         environment = create_environment([MyTestUser], mocked_options())
         environment.stop_timeout = short_time
@@ -1465,7 +1483,7 @@ class TestStopTimeout(LocustTestCase):
 
         class MyTestUser(User):
             tasks = [MyTaskSet]
-            wait_time = constant(1)
+            wait_time = between(1, 1)
 
         environment = Environment(user_classes=[MyTestUser], stop_timeout=short_time)
         runner = environment.create_local_runner()
@@ -1495,6 +1513,7 @@ class TestStopTimeout(LocustTestCase):
 
         class MyTestUser(User):
             tasks = [MyTaskSet]
+            wait_time = constant(0)
 
         environment = create_environment([MyTestUser], mocked_options())
         environment.stop_timeout = short_time
@@ -1555,6 +1574,7 @@ class TestStopTimeout(LocustTestCase):
 
         class MyTestUser(User):
             tasks = [MyTaskSet]
+            wait_time = constant(0)
 
         environment = create_environment([MyTestUser], mocked_options())
         runner = environment.create_local_runner()
@@ -1644,6 +1664,7 @@ class TestStopTimeout(LocustTestCase):
 
         class MyTestUser(User):
             tasks = [MyTaskSet]
+            wait_time = constant(0)
 
         environment = Environment(user_classes=[MyTestUser], stop_timeout=2)
         runner = environment.create_local_runner()
